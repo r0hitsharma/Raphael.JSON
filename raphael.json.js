@@ -5,12 +5,35 @@
  */
 
 (function() {
+
+	Raphael.fn.preserveSet = function(set, setName){
+		var setObj = {
+			name: setName,
+			val: set
+		};
+
+		this.setsToPreserve ? 
+			this.setsToPreserve.push(setObj) : (this.setsToPreserve = [setObj]);
+	}
+
+	Raphael.fn.restoreSet = function(setName){
+		return this.restoredSets[setName];
+	}
+
 	Raphael.fn.toJSON = function(callback) {
 		var
 			data,
 			elements = new Array,
 			paper    = this
 			;
+
+		if(paper.setsToPreserve)
+			paper.setsToPreserve.forEach(function(pset){
+
+				pset.val.forEach(function(el){
+					 el.sets ? el.sets.push(pset.name) : (el.sets = [pset.name]);
+				});
+			});
 
 		for ( var el = paper.bottom; el != null; el = el.next ) {
 			data = callback ? callback(el, new Object) : new Object;
@@ -20,7 +43,8 @@
 				type:      el.type,
 				attrs:     el.attrs,
 				transform: el.matrix.toTransformString(),
-				id:        el.id
+				id:        el.id,
+				sets:      el.sets
 				});
 		}
 
@@ -32,6 +56,8 @@
 			el,
 			paper = this
 			;
+
+		var restoredSets = this.restoredSets = {};
 
 		if ( typeof json === 'string' ) json = JSON.parse(json);
 
@@ -46,6 +72,17 @@
 				if ( callback ) el = callback(el, json[i].data);
 
 				if ( el ) paper.set().push(el);
+
+				//recover the associated sets and push to each of them
+				if(json[i].sets)
+				{
+					
+					json[i].sets.forEach(function(restoredSet){
+
+						restoredSets[restoredSet] ? restoredSets[restoredSet].push(el) : (restoredSets[restoredSet] = [el]);
+					});
+				}
+
 			}
 		}
 	}

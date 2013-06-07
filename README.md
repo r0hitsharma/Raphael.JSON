@@ -75,18 +75,11 @@ var rect = paper.rect(50, 50, 50, 50)
 
 exampleSet.push(rect);
 
-// Store a unique identifier in each of the set's elements
-for ( i in exampleSet ) {
-	exampleSet[i].setName = 'exampleSet';
-}
+// Indicate which sets you want to preserve, with which name
+r.preserveSet(exampleSet, "exampleSet");
 
 // Serialize the paper
-var json = paper.toJSON(function(el, data) {
-	// Save the set identifier along with the other data
-	data.setName = el.setName;
-
-	return data;
-});
+var json = paper.toJSON();
 
 // Start over
 paper.clear();
@@ -94,19 +87,16 @@ paper.clear();
 exampleSet = null;
 
 // Restore the paper to the previous state using serialized data
-paper.fromJSON(json, function(el, data) {
-	// Recreate the set using the identifier
-	if ( !window[data.setName] ) window[data.setName] = paper.set();
+paper.fromJSON(json);
 
-	// Place each element back into the set
-	window[data.setName].push(el);
-
-	return el;
-});
+// Restore the set
+exampleSet = r.restoreSet("exampleSet");
 
 // The set is restored
 console.log(exampleSet);
 ```
+#####Note:
+This method of restoring sets only restores all the elements which were within the set previously, and flattens any nested sets. For this reason it's not advised to use this method with nested sets.
 
 Raphaël.JSON and Raphaël.FreeTransform
 --------------------------------------
