@@ -20,6 +20,15 @@
 		return this.restoredSets[setName];
 	}
 
+	function markSetElements(set, setName, paper){
+		set.forEach(function(el){
+					if ( el.constructor.prototype == paper.set().constructor.prototype )
+						markSetElements(el, setName, paper);
+					else
+					 	el.sets ? el.sets.push(setName) : (el.sets = [setName]);
+				});
+	}
+
 	Raphael.fn.toJSON = function(callback) {
 		var
 			data,
@@ -27,12 +36,10 @@
 			paper    = this
 			;
 
+		//recursively mark the set elements	
 		if(paper.setsToPreserve)
 			paper.setsToPreserve.forEach(function(pset){
-
-				pset.val.forEach(function(el){
-					 el.sets ? el.sets.push(pset.name) : (el.sets = [pset.name]);
-				});
+				markSetElements(pset.val, pset.name, paper);				
 			});
 
 		for ( var el = paper.bottom; el != null; el = el.next ) {
@@ -71,7 +78,7 @@
 
 				if ( callback ) el = callback(el, json[i].data);
 
-				if ( el ) paper.set().push(el);
+				if ( el ) paper.set(el);
 
 				//recover the associated sets and push to each of them
 				if(json[i].sets)
@@ -79,7 +86,7 @@
 					
 					json[i].sets.forEach(function(restoredSet){
 
-						restoredSets[restoredSet] ? restoredSets[restoredSet].push(el) : (restoredSets[restoredSet] = [el]);
+						restoredSets[restoredSet] ? restoredSets[restoredSet].push(el) : (restoredSets[restoredSet] = paper.set(el));
 					});
 				}
 
